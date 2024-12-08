@@ -1,7 +1,3 @@
-# Tauri + React + Typescript
+# Rust Chess Engine
 
-This template should help get you started developing with Tauri, React and Typescript in Vite.
-
-## Recommended IDE Setup
-
-- [VS Code](https://code.visualstudio.com/) + [Tauri](https://marketplace.visualstudio.com/items?itemName=tauri-apps.tauri-vscode) + [rust-analyzer](https://marketplace.visualstudio.com/items?itemName=rust-lang.rust-analyzer)
+This is my attempt at making a rust chess engine. The backend/engine logic will be fully implemented in Rust. Since the frontend isn't the important part here, I used React and Tailwind as I'm familiar with them and I could get this part done fast. 
