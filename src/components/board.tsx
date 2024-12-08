@@ -1,5 +1,6 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import blk_queen from "../assets/blk_queen.svg"
+import { parseFen } from "../helpers/fenParser"
 
 type pieceSvgType = string | null;
 
@@ -7,8 +8,12 @@ export default function Board() {
   const [squareSize, _] = useState(100);
   const [pieceSvg, setPieceSvg] = useState<pieceSvgType[]>([]);
 
+  useEffect(() => {
+    setPieceSvg(parseFen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"))
+  }, [])
+
   return(
-    <div className="bg-zinc-800 flex flex-col rounded" style={{
+    <div className="rounded flex flex-col rounded overflow-hidden" style={{
       height: squareSize * 8,
       width: squareSize * 8
     }}>
@@ -24,15 +29,19 @@ export default function Board() {
                 // Makes all even numbers light, but has 1 offset for even rows
                 // Easiest way I came up with honestly
                 let light = (row * 8 + col + evenRow) % 2 == 0;
+                let currSvgIdx = row * 8 + col;
                 return(
                   // Col
-                  <div key={colIdx} className={`flex justify-center items-center ${light ? "bg-zinc-700" : ""}`} style={{
+                  <div key={colIdx} className={`flex justify-center items-center ${light ? "bg-zinc-700" : "bg-zinc-800"}`} style={{
                     height: squareSize,
                     width: squareSize
                   }}>
-                    <img src={blk_queen} style={{
-                      height: squareSize - 20
-                    }}/>
+                    {
+                      pieceSvg[currSvgIdx] &&
+                      <img src={pieceSvg[currSvgIdx]} className="cursor-pointer" style={{
+                        height: squareSize - 20
+                      }}/>
+                    }
                   </div>
                 )
               })}
