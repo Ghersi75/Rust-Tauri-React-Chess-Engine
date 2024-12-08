@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react"
-import blk_queen from "../assets/blk_queen.svg"
 import { parseFen } from "../helpers/fenParser"
 
 type pieceSvgType = string | null;
@@ -7,13 +6,27 @@ type pieceSvgType = string | null;
 export default function Board() {
   const [squareSize, _] = useState(100);
   const [pieceSvg, setPieceSvg] = useState<pieceSvgType[]>([]);
+  const [selectedGrid, setSelectedGrid] = useState<boolean[]>(
+    Array(64).fill(false) // Initialize all squares as not selected
+  );
 
   useEffect(() => {
     setPieceSvg(parseFen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"))
   }, [])
 
+  function onClickGrid(idx: number) {
+    setSelectedGrid((prev) =>
+      prev.map((selected, i) => {
+        if (i == idx) {
+          return !selected;
+        }
+        return (false);
+      })
+    );
+  }
+
   return(
-    <div className="rounded flex flex-col rounded overflow-hidden" style={{
+    <div className="rounded flex flex-col rounded overflow-hidden m-12" style={{
       height: squareSize * 8,
       width: squareSize * 8
     }}>
@@ -30,17 +43,33 @@ export default function Board() {
                 // Easiest way I came up with honestly
                 let light = (row * 8 + col + evenRow) % 2 == 0;
                 let currSvgIdx = row * 8 + col;
+                let color;
+
+                if ( light ) {
+                  if ( selectedGrid[currSvgIdx] ) {
+                    color = "bg-zinc-500";
+                  } else {
+                    color = "bg-zinc-700";
+                  }
+                } else {
+                  if ( selectedGrid[currSvgIdx] ) {
+                    color = "bg-zinc-600";
+                  } else {
+                    color = "bg-zinc-800";
+                  }
+                }
+
                 return(
                   // Col
-                  <div key={colIdx} className={`flex justify-center items-center ${light ? "bg-zinc-700" : "bg-zinc-800"}`} style={{
+                  <div key={colIdx} className={`flex justify-center items-center ${color}`} style={{
                     height: squareSize,
                     width: squareSize
                   }}>
                     {
                       pieceSvg[currSvgIdx] &&
                       <img src={pieceSvg[currSvgIdx]} className="cursor-pointer" style={{
-                        height: squareSize - 20
-                      }}/>
+                        height: squareSize - 10
+                      }} onClick={() => onClickGrid(currSvgIdx)}/>
                     }
                   </div>
                 )
