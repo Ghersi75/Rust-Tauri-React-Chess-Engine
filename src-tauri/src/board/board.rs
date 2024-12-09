@@ -1,10 +1,10 @@
 use core::fmt;
-use std::u8;
+use std::{collections::HashMap, u8};
 
 use crate::board::bitboard;
 use regex::Regex;
 
-use super::bitboard::{is_occupied, BitBoardError, Bitboard};
+use super::bitboard::{is_occupied, set_bit, BitBoardError, Bitboard};
 
 enum ActiveColor {
   White = 0,
@@ -89,25 +89,29 @@ impl BoardState {
       return Err(BoardStateError::InvalidFENInput);
     }
 
-    let mut blk_p: Bitboard = 0;
-    let mut blk_n: Bitboard = 0;
-    let mut blk_b: Bitboard = 0;
-    let mut blk_r: Bitboard = 0;
-    let mut blk_q: Bitboard = 0;
-    let mut blk_k: Bitboard = 0;
+    let mut bitboards: [Bitboard; 13] = [0; 13];
 
-    let mut wht_p: Bitboard = 0;
-    let mut wht_n: Bitboard = 0;
-    let mut wht_b: Bitboard = 0;
-    let mut wht_r: Bitboard = 0;
-    let mut wht_q: Bitboard = 0;
-    let mut wht_k: Bitboard = 0;
+    let piece_map: HashMap<char, usize> = HashMap::from([
+      ('p', 0), // Black pawn
+      ('n', 1), // Black knight
+      ('b', 2), // Black bishop
+      ('r', 3), // Black rook
+      ('q', 4), // Black queen
+      ('k', 5), // Black king
+      ('P', 6), // White pawn
+      ('N', 7), // White knight
+      ('B', 8), // White bishop
+      ('R', 9), // White rook
+      ('Q', 10), // White queen
+      ('K', 11), // White king
+    ]);
 
     let split_fen: Vec<&str> = fen.split(" ").collect();
     let fen_position: &str = split_fen[0];
     let (mut row, mut col): (u8, u8) = (0, 0);
     for i in 0..fen_position.len() {
       if let Some(curr_char) = fen_position.chars().nth(i) {
+        let curr_square = row * 8 + col;
         // println!("curr_char: {curr_char}, row: {row}, col: {col}, idx: {}", row * 8 + col);
         // TODO: Fix this ugly match statement
         match curr_char {
@@ -116,58 +120,14 @@ impl BoardState {
             col = 0;
           }
           '1'..='8' => col += curr_char.to_digit(10).ok_or(BoardStateError::CharConversionError)? as u8,
-          'p' => {
-            blk_p = bitboard::set_bit(blk_p, row * 8 + col).map_err(|e| BoardStateError::BitBoardOperationError)?;
-            col += 1;
-          },
-          'n' => {
-            blk_n = bitboard::set_bit(blk_n, row * 8 + col).map_err(|e| BoardStateError::BitBoardOperationError)?;
-            col +=1;
-          },
-          'b' => {
-            blk_b = bitboard::set_bit(blk_b, row * 8 + col).map_err(|e| BoardStateError::BitBoardOperationError)?;
-            col +=1;
-          },
-          'r' => {
-            blk_r = bitboard::set_bit(blk_r, row * 8 + col).map_err(|e| BoardStateError::BitBoardOperationError)?;
-            col += 1;
-          },
-          'q' => {
-            blk_q = bitboard::set_bit(blk_q, row * 8 + col).map_err(|e| BoardStateError::BitBoardOperationError)?;
-            col += 1;
-          },
-          'k' => {
-            blk_k = bitboard::set_bit(blk_k, row * 8 + col).map_err(|e| BoardStateError::BitBoardOperationError)?;
-            col += 1;
-          },
-          'P' => {
-            wht_p = bitboard::set_bit(wht_p, row * 8 + col).map_err(|e| BoardStateError::BitBoardOperationError)?;
-            col += 1;
-          },
-          'N' => {
-            wht_n = bitboard::set_bit(wht_n, row * 8 + col).map_err(|e| BoardStateError::BitBoardOperationError)?;
-            col += 1;
+          _ => {
+            if let Some(&piece_idx) = piece_map.get(&curr_char) {
+              bitboards[piece_idx] = set_bit(bitboards[piece_idx], curr_square).map_err(|e| BoardStateError::BitBoardOperationError)?;
+              col += 1;
+            } else {
+              return Err(BoardStateError::InvalidFENInput);
+            }
           }
-          'B' => {
-            wht_b = bitboard::set_bit(wht_b, row * 8 + col).map_err(|e| BoardStateError::BitBoardOperationError)?;
-            col += 1;
-          }
-          'R' => {
-            wht_r = bitboard::set_bit(wht_r, row * 8 + col).map_err(|e| BoardStateError::BitBoardOperationError)?;
-            col += 1;
-          },
-          'Q' => {
-            wht_q = bitboard::set_bit(wht_q, row * 8 + col).map_err(|e| BoardStateError::BitBoardOperationError)?;
-            col += 1;
-          },
-          'K' => {
-            wht_k = bitboard::set_bit(wht_k, row * 8 + col).map_err(|e| BoardStateError::BitBoardOperationError)?;
-            col += 1;
-          }
-          // Somehow a character wasn't covered, so it must be invalid
-          // Unlikely since regex should check it, but I'm sure if that pattern works or not
-          // Better safe than sorry
-          _ => return Err(BoardStateError::InvalidFENInput)
         }
       }
     }
@@ -188,10 +148,14 @@ impl BoardState {
     let halfmoves: u8 = split_fen[4].parse::<u8>().map_err(|e| BoardStateError::CharConversionError)?;
     let fullmoves: u8 = split_fen[5].parse::<u8>().map_err(|e| BoardStateError::CharConversionError)?;
 
+    // Fold goes through all items and accumulates the result and returns it at the end
+    // In this case, at each step it runs ^ (XOR) on acc with each new curr value
+    // 0 is just the starting point, an empty bitbaord in this case
     // OR would work here, but in case something was messed up, XOR will remove overlapping pieces and I can debug later if pieces are missing
     // It should not cause issues tho since no pieces should be overlapping
-    let full_board: Bitboard = blk_p ^ blk_n ^ blk_b ^ blk_r ^ blk_q ^ blk_k ^ wht_p ^ wht_n ^ wht_b ^ wht_r ^ wht_q ^ wht_k;
-    let bitboards: [Bitboard; 13] = [blk_p, blk_n, blk_b, blk_r, blk_q, blk_k, wht_p, wht_n, wht_b, wht_r, wht_q, wht_k, full_board];
+    bitboards[12] = bitboards[0..12].iter().fold(0, |acc, curr| acc ^ curr);
+    // Works as intended
+    // println!("{:064b}", bitboards[12]);
     Ok(Self{
       bitboards,
       active_color,
