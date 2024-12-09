@@ -4,7 +4,13 @@
 #![allow(unused)]
 
 mod board;
+use board::board::BoardState;
+
 
 fn main() {
+    match BoardState::init_default() {
+        Ok(board) => board.print_board(),
+        Err(e) => println!("{e}")
+    }
     chess_lib::run()
 }
