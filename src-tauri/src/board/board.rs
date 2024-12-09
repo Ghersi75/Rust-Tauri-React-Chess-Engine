@@ -152,4 +152,11 @@ impl BoardState {
       fullmoves
     })
   }
+
+  pub fn init_default() -> Result<Self, BoardStateError> {
+    // https://en.wikipedia.org/wiki/Forsyth%E2%80%93Edwards_Notation#Examples
+    let fen_starting_pos: &str = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+
+    Self::init_from_fen(fen_starting_pos)
+  }
 }
