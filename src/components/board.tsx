@@ -12,8 +12,18 @@ export default function Board() {
     setPieceSvg(parseFen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"))
   }, [])
 
-  function onClickGrid(idx: number) {
-    setSelected(idx);
+  function onClickGrid(e: React.MouseEvent<HTMLImageElement, MouseEvent>, idx: number) {
+    e.stopPropagation();
+    // deselect
+    if (selected == idx) {
+      setSelected(-1)
+    } else {
+      setSelected(idx);
+    }
+  }
+
+  function onClickNonPiece() {
+    setSelected(-1);
   }
 
   return(
@@ -55,12 +65,12 @@ export default function Board() {
                   <div key={colIdx} className={`flex justify-center items-center ${color}`} style={{
                     height: squareSize,
                     width: squareSize
-                  }}>
+                  }} onClick={onClickNonPiece}>
                     {
                       pieceSvg[currSvgIdx] &&
                       <img src={pieceSvg[currSvgIdx]} className="cursor-pointer" style={{
                         height: squareSize - 10
-                      }} onClick={() => onClickGrid(currSvgIdx)}/>
+                      }} onClick={(e) => onClickGrid(e, currSvgIdx)}/>
                     }
                   </div>
                 )
