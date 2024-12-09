@@ -1,3 +1,4 @@
+use core::fmt;
 use std::u8;
 
 use crate::board::bitboard;
@@ -17,6 +18,17 @@ pub enum BoardStateError {
   CharConversionError
 }
 
+impl fmt::Display for BoardStateError {
+  fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    match self {
+      Self::InvalidFENInput => write!(f, "Invalid FEN Input"),
+      Self::BitBoardOperationError => write!(f, "BitBoard Operation Error"),
+      Self::InvalidActiveColor => write!(f, "Invalid Active Color"),
+      Self::CharConversionError => write!(f, "Char Conversion Error")
+    }
+  }
+}
+
 impl ActiveColor {
   // Basic function for toggling between current ActiveColor
   pub fn toggle(self) -> Self {
@@ -28,7 +40,7 @@ impl ActiveColor {
 }
 
 // The board state will be stored as a FEN position so its easy to encode/decode
-struct BoardState {
+pub struct BoardState {
   // The boards will be stored as follows
   // --------------------------
   // Black Pieces
@@ -96,30 +108,66 @@ impl BoardState {
     let (mut row, mut col): (u8, u8) = (0, 0);
     for i in 0..fen_position.len() {
       if let Some(curr_char) = fen_position.chars().nth(i) {
+        // println!("curr_char: {curr_char}, row: {row}, col: {col}, idx: {}", row * 8 + col);
         match curr_char {
           '/' => {
             row += 1;
             col = 0;
           }
-          '1'..='8' => col += u8::try_from(curr_char).map_err(|e| BoardStateError::CharConversionError)?,
-          'p' => blk_p = bitboard::set_bit(blk_p, row * 8 + col).map_err(|e| BoardStateError::BitBoardOperationError)?,
-          'n' => blk_n = bitboard::set_bit(blk_n, row * 8 + col).map_err(|e| BoardStateError::BitBoardOperationError)?,
-          'b' => blk_b = bitboard::set_bit(blk_b, row * 8 + col).map_err(|e| BoardStateError::BitBoardOperationError)?,
-          'r' => blk_r = bitboard::set_bit(blk_r, row * 8 + col).map_err(|e| BoardStateError::BitBoardOperationError)?,
-          'q' => blk_q = bitboard::set_bit(blk_q, row * 8 + col).map_err(|e| BoardStateError::BitBoardOperationError)?,
-          'k' => blk_k = bitboard::set_bit(blk_k, row * 8 + col).map_err(|e| BoardStateError::BitBoardOperationError)?,
-          'p' => wht_p = bitboard::set_bit(blk_p, row * 8 + col).map_err(|e| BoardStateError::BitBoardOperationError)?,
-          'n' => wht_n = bitboard::set_bit(blk_p, row * 8 + col).map_err(|e| BoardStateError::BitBoardOperationError)?,
-          'b' => wht_b = bitboard::set_bit(blk_p, row * 8 + col).map_err(|e| BoardStateError::BitBoardOperationError)?,
-          'r' => wht_r = bitboard::set_bit(blk_p, row * 8 + col).map_err(|e| BoardStateError::BitBoardOperationError)?,
-          'q' => wht_q = bitboard::set_bit(blk_p, row * 8 + col).map_err(|e| BoardStateError::BitBoardOperationError)?,
-          'k' => wht_k = bitboard::set_bit(blk_p, row * 8 + col).map_err(|e| BoardStateError::BitBoardOperationError)?,
+          '1'..='8' => col += curr_char.to_digit(10).ok_or(BoardStateError::CharConversionError)? as u8,
+          'p' => {
+            blk_p = bitboard::set_bit(blk_p, row * 8 + col).map_err(|e| BoardStateError::BitBoardOperationError)?;
+            col += 1;
+          },
+          'n' => {
+            blk_n = bitboard::set_bit(blk_n, row * 8 + col).map_err(|e| BoardStateError::BitBoardOperationError)?;
+            col +=1;
+          },
+          'b' => {
+            blk_b = bitboard::set_bit(blk_b, row * 8 + col).map_err(|e| BoardStateError::BitBoardOperationError)?;
+            col +=1;
+          },
+          'r' => {
+            blk_r = bitboard::set_bit(blk_r, row * 8 + col).map_err(|e| BoardStateError::BitBoardOperationError)?;
+            col += 1;
+          },
+          'q' => {
+            blk_q = bitboard::set_bit(blk_q, row * 8 + col).map_err(|e| BoardStateError::BitBoardOperationError)?;
+            col += 1;
+          },
+          'k' => {
+            blk_k = bitboard::set_bit(blk_k, row * 8 + col).map_err(|e| BoardStateError::BitBoardOperationError)?;
+            col += 1;
+          },
+          'P' => {
+            wht_p = bitboard::set_bit(wht_p, row * 8 + col).map_err(|e| BoardStateError::BitBoardOperationError)?;
+            col += 1;
+          },
+          'N' => {
+            wht_n = bitboard::set_bit(wht_n, row * 8 + col).map_err(|e| BoardStateError::BitBoardOperationError)?;
+            col += 1;
+          }
+          'B' => {
+            wht_b = bitboard::set_bit(wht_b, row * 8 + col).map_err(|e| BoardStateError::BitBoardOperationError)?;
+            col += 1;
+          }
+          'R' => {
+            wht_r = bitboard::set_bit(wht_r, row * 8 + col).map_err(|e| BoardStateError::BitBoardOperationError)?;
+            col += 1;
+          },
+          'Q' => {
+            wht_q = bitboard::set_bit(wht_q, row * 8 + col).map_err(|e| BoardStateError::BitBoardOperationError)?;
+            col += 1;
+          },
+          'K' => {
+            wht_k = bitboard::set_bit(wht_k, row * 8 + col).map_err(|e| BoardStateError::BitBoardOperationError)?;
+            col += 1;
+          }
           // Somehow a character wasn't covered, so it must be invalid
           // Unlikely since regex should check it, but I'm sure if that pattern works or not
           // Better safe than sorry
           _ => return Err(BoardStateError::InvalidFENInput)
         }
-        col += 1;
       }
     }
 
@@ -158,5 +206,9 @@ impl BoardState {
     let fen_starting_pos: &str = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
     Self::init_from_fen(fen_starting_pos)
+  }
+
+  pub fn print_board(self) {
+    
   }
 }
