@@ -6,23 +6,14 @@ type pieceSvgType = string | null;
 export default function Board() {
   const [squareSize, _] = useState(100);
   const [pieceSvg, setPieceSvg] = useState<pieceSvgType[]>([]);
-  const [selectedGrid, setSelectedGrid] = useState<boolean[]>(
-    Array(64).fill(false) // Initialize all squares as not selected
-  );
+  const [selected, setSelected] = useState(-1);
 
   useEffect(() => {
     setPieceSvg(parseFen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"))
   }, [])
 
   function onClickGrid(idx: number) {
-    setSelectedGrid((prev) =>
-      prev.map((selected, i) => {
-        if (i == idx) {
-          return !selected;
-        }
-        return (false);
-      })
-    );
+    setSelected(idx);
   }
 
   return(
@@ -46,13 +37,13 @@ export default function Board() {
                 let color;
 
                 if ( light ) {
-                  if ( selectedGrid[currSvgIdx] ) {
+                  if ( currSvgIdx == selected ) {
                     color = "bg-zinc-500";
                   } else {
                     color = "bg-zinc-700";
                   }
                 } else {
-                  if ( selectedGrid[currSvgIdx] ) {
+                  if ( currSvgIdx == selected ) {
                     color = "bg-zinc-600";
                   } else {
                     color = "bg-zinc-800";
