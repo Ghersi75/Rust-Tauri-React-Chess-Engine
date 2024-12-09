@@ -109,6 +109,7 @@ impl BoardState {
     for i in 0..fen_position.len() {
       if let Some(curr_char) = fen_position.chars().nth(i) {
         // println!("curr_char: {curr_char}, row: {row}, col: {col}, idx: {}", row * 8 + col);
+        // TODO: Fix this ugly match statement
         match curr_char {
           '/' => {
             row += 1;
