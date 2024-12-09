@@ -6,7 +6,7 @@ use regex::Regex;
 
 use super::bitboard::{is_occupied, set_bit, BitBoardError, Bitboard};
 
-enum ActiveColor {
+pub enum ActiveColor {
   White = 0,
   Black = 1,
 }
