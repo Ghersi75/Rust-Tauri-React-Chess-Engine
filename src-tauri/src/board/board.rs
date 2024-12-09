@@ -4,7 +4,7 @@ use std::u8;
 use crate::board::bitboard;
 use regex::Regex;
 
-use super::bitboard::Bitboard;
+use super::bitboard::{is_occupied, BitBoardError, Bitboard};
 
 enum ActiveColor {
   White = 0,
@@ -208,7 +208,41 @@ impl BoardState {
     Self::init_from_fen(fen_starting_pos)
   }
 
+  pub fn get_piece_at_square(&self, square: u8) -> Result<char, BoardStateError> {
+    let piece_map = [
+      ('p', 0), // Black pawn
+      ('n', 1), // Black knight
+      ('b', 2), // Black bishop
+      ('r', 3), // Black rook
+      ('q', 4), // Black queen
+      ('k', 5), // Black king
+      ('P', 6), // White pawn
+      ('N', 7), // White knight
+      ('B', 8), // White bishop
+      ('R', 9), // White rook
+      ('Q', 10), // White queen
+      ('K', 11), // White king
+    ];
+
+    let mut res: char = '.';
+    for (piece_char, piece_bitboard_idx) in piece_map.iter() {
+      if is_occupied(self.bitboards[*piece_bitboard_idx], square).map_err(|e| BoardStateError::BitBoardOperationError)? {
+        res = *piece_char;
+      }
+    }
+
+    Ok(res)
+  }
+
   pub fn print_board(self) {
-    
+    for row in 0..8 {
+      for col in 0..8 {
+        let curr_square = row * 8 + col;
+        // Check that current square is occupied before printing
+        let curr_piece: char = self.get_piece_at_square(curr_square).unwrap_or('.');
+        print!("{} ", curr_piece);
+      }
+      println!();
+    }
   }
 }
