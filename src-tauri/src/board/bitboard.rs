@@ -43,3 +43,20 @@ pub fn toggle_bit(bitboard: Bitboard, square: u8) -> Result<Bitboard, BitBoardEr
   Ok(bitboard ^ (1 << square))
 }
 
+pub fn is_occupied(bitboard: Bitboard, square: u8) -> Result<bool, BitBoardError> {
+  if square > 63 {
+    return Err(BitBoardError::InvalidSquare);
+  }
+
+  // Create a mask with only the desired bit being 1
+  let mask: Bitboard = 1 << square;
+  // Anything & 1 = Anything
+  // Anything & 0 = 0
+  // Since only the bit we want to extract is has a 1 on the mask, the result will only keep track of that bit and clear the rest
+  let res: Bitboard = bitboard & mask;
+
+  // We want to shift the bit we care about so the resut is the right most bit
+  // We return whether the value is 1, meaning the bit is occupied, or 0 meaning it's not occupied
+  Ok(res >> square == 1)
+}
+
