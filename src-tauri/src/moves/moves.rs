@@ -29,7 +29,7 @@ struct Move {
   from_square: u8,
   // Ending square. Same as above. Stored as u8 between 0-63 inclusive
   to_square: u8,
-  // What piece type was moved
+  // What piece type was moved. Case sensitive. If ActiveColor is white and piece is 'p' (black pawn), will throw error
   piece_moved: Piece,
   // Which color was active at the time of the move. Represents who made the move
   active_color: ActiveColor,
